@@ -148,7 +148,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-6">
           {/* Stats Row */}
           <StatsBoxes
             totalTrades={stats.totalTrades}
@@ -158,7 +158,7 @@ export default function DashboardPage() {
           />
 
           {/* Main Grid */}
-          <div className="grid grid-cols-3 gap-8">
+          <div className="grid grid-cols-3 gap-6 mt-6">
             {/* Trades List - Takes 2 columns */}
             <div className="col-span-2">
               <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '16px', color: 'var(--text-primary)' }}>

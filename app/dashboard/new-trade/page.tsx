@@ -37,6 +37,19 @@ export default function NewTradePage() {
     setSuccess('');
     setIsSubmitting(true);
 
+    // Validation
+    if (!formData.symbol) {
+      setError('Please select a trading symbol');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.entry_price) {
+      setError('Please enter an entry price');
+      setIsSubmitting(false);
+      return;
+    }
+
     if (checklist.length === 0) {
       setError('Please complete the trading checklist first');
       setIsSubmitting(false);
@@ -45,11 +58,20 @@ export default function NewTradePage() {
 
     const checklistCompleted = checklist.every((item) => item.checked);
     if (!checklistCompleted) {
-      setError('Warning: Not all checklist items are checked. Continue anyway?');
+      setError('⚠️ Warning: Not all checklist items are checked');
+      setIsSubmitting(false);
+      return;
     }
 
     try {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error('Not authenticated. Please log in first.');
+
+      console.log('📝 Submitting trade form with data:', {
+        symbol: formData.symbol,
+        asset_class: formData.asset_class,
+        entry_price: formData.entry_price,
+        user_id: user.id,
+      });
 
       const { data: tradeData, error: tradeError } = await supabase
         .from('trades')
@@ -71,7 +93,12 @@ export default function NewTradePage() {
         .select()
         .single();
 
-      if (tradeError) throw tradeError;
+      if (tradeError) {
+        console.error('❌ Trade insert error:', tradeError);
+        throw tradeError;
+      }
+
+      console.log('✅ Trade created successfully:', tradeData);
 
       if (tradeData) {
         const { error: checklistError } = await supabase.from('trading_checklist').insert({
@@ -90,15 +117,22 @@ export default function NewTradePage() {
             checklist.find((c) => c.id === 'risk_reward')?.checked ?? false,
         });
 
-        if (checklistError) throw checklistError;
+        if (checklistError) {
+          console.error('❌ Checklist insert error:', checklistError);
+          throw checklistError;
+        }
+
+        console.log('✅ Checklist saved successfully');
       }
 
-      setSuccess('Trade saved successfully!');
+      setSuccess('Trade saved successfully! Redirecting...');
       setTimeout(() => {
         router.push(`/dashboard/trade/${tradeData?.id}`);
       }, 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save trade');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save trade';
+      console.error('❌ Trade submission error:', errorMessage);
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -129,7 +163,7 @@ export default function NewTradePage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-6">
           {/* Alerts */}
           {error && (
             <div className="mb-6 p-4 rounded-lg flex items-start gap-3" style={{ background: 'rgba(248, 81, 73, 0.15)', border: '1px solid var(--accent-red)' }}>
