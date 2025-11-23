@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { TradingChecklist } from '@/components/TradingChecklist';
 import { TopDownAnalysis } from '@/components/TopDownAnalysis';
 import { TradeForm } from '@/components/TradeForm';
+import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface ChecklistItem {
@@ -45,13 +46,11 @@ export default function NewTradePage() {
     const checklistCompleted = checklist.every((item) => item.checked);
     if (!checklistCompleted) {
       setError('Warning: Not all checklist items are checked. Continue anyway?');
-      // Allow submission but warn the user
     }
 
     try {
       if (!user) throw new Error('Not authenticated');
 
-      // Insert trade
       const { data: tradeData, error: tradeError } = await supabase
         .from('trades')
         .insert({
@@ -74,7 +73,6 @@ export default function NewTradePage() {
 
       if (tradeError) throw tradeError;
 
-      // Insert checklist
       if (tradeData) {
         const { error: checklistError } = await supabase.from('trading_checklist').insert({
           trade_id: tradeData.id,
@@ -107,47 +105,61 @@ export default function NewTradePage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Create New Trade</h1>
-        <p className="text-slate-400">Follow the checklist and complete your pre-trade analysis</p>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f1117 0%, #161b22 50%, #0f1117 100%)' }}>
+      {/* Sidebar */}
+      <DashboardSidebar />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar */}
+        <div
+          className="p-6 border-b"
+          style={{
+            background: 'var(--glass-bg)',
+            backdropFilter: 'blur(10px)',
+            borderColor: 'var(--glass-border)',
+          }}
+        >
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)' }}>
+            Create New Trade
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            Follow the checklist and complete your pre-trade analysis
+          </p>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-8">
+          {/* Alerts */}
+          {error && (
+            <div className="mb-6 p-4 rounded-lg flex items-start gap-3" style={{ background: 'rgba(248, 81, 73, 0.15)', border: '1px solid var(--accent-red)' }}>
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div style={{ color: 'var(--accent-red)' }}>{error}</div>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 p-4 rounded-lg flex items-start gap-3" style={{ background: 'rgba(63, 185, 80, 0.15)', border: '1px solid var(--accent-green)' }}>
+              <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+              <div style={{ color: 'var(--accent-green)' }}>{success}</div>
+            </div>
+          )}
+
+          {/* Layout - Checklist, Analysis, Form */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Checklist */}
+            <div className="lg:col-span-1">
+              <TradingChecklist onChange={handleChecklistChange} />
+            </div>
+
+            {/* Right Column - Analysis & Form */}
+            <div className="lg:col-span-2 space-y-6">
+              <TopDownAnalysis onChange={handleAnalysisChange} />
+              <TradeForm onChange={() => {}} onSubmit={handleTradeSubmit} isSubmitting={isSubmitting} />
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* Alerts */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-          <div className="text-red-300">{error}</div>
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-6 p-4 bg-green-900/20 border border-green-700 rounded-lg flex items-start gap-3">
-          <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-          <div className="text-green-300">{success}</div>
-        </div>
-      )}
-
-      {/* Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Left Column - Checklist */}
-        <div className="lg:col-span-1">
-          <TradingChecklist onChange={handleChecklistChange} />
-        </div>
-
-        {/* Right Column - Analysis & Form */}
-        <div className="lg:col-span-2 space-y-6">
-          <TopDownAnalysis onChange={handleAnalysisChange} />
-          <TradeForm onChange={() => {}} onSubmit={handleTradeSubmit} isSubmitting={isSubmitting} />
-        </div>
-      </div>
-
-      {/* Mobile: Stacked Layout */}
-      <style jsx>{`
-        @media (max-width: 1024px) {
-          /* Checklist, then Analysis, then Form */
-        }
-      `}</style>
     </div>
   );
 }

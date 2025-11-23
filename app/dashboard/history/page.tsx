@@ -6,6 +6,8 @@ import { supabase, Trade } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { TrendingUp, TrendingDown, Filter } from 'lucide-react';
+import { DashboardSidebar } from '@/components/DashboardSidebar';
+import { ProfessionalTradeCard } from '@/components/ProfessionalTradeCard';
 
 export default function HistoryPage() {
   const { user } = useAuth();
@@ -50,155 +52,190 @@ export default function HistoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-700 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">Loading trades...</p>
+      <div className="flex h-screen">
+        <DashboardSidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+            <p style={{ color: 'var(--text-secondary)' }}>Loading trades...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Trade History</h1>
-        <p className="text-slate-400">View and manage all your trades</p>
-      </div>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f1117 0%, #161b22 50%, #0f1117 100%)' }}>
+      {/* Sidebar */}
+      <DashboardSidebar />
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-slate-400" />
-          <span className="text-slate-400 font-medium">Filter:</span>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar */}
+        <div
+          className="p-6 border-b"
+          style={{
+            background: 'var(--glass-bg)',
+            backdropFilter: 'blur(10px)',
+            borderColor: 'var(--glass-border)',
+          }}
+        >
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)' }}>
+            Trade History
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            View and manage all your trades
+          </p>
         </div>
 
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value as any)}
-          className="px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 focus:border-blue-500 focus:outline-none transition"
-        >
-          <option value="all">All Status</option>
-          <option value="open">Open</option>
-          <option value="closed">Closed</option>
-        </select>
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-8">
+          {/* Filters */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Filter className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
+              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>Filter:</span>
+            </div>
 
-        <select
-          value={filterAsset}
-          onChange={(e) => setFilterAsset(e.target.value as any)}
-          className="px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 focus:border-blue-500 focus:outline-none transition"
-        >
-          <option value="all">All Assets</option>
-          <option value="forex">Forex</option>
-          <option value="commodity">Commodity</option>
-          <option value="index">Index</option>
-        </select>
-      </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-tertiary)' }}>Status</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as any)}
+                  className="w-full mt-2 px-4 py-2 rounded-lg transition-all"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
+                    color: 'var(--text-primary)',
+                    fontSize: '12px',
+                  }}
+                >
+                  <option value="all">All Status</option>
+                  <option value="open">Open</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
 
-      {/* Trades Table */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
-        {trades.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-slate-400">No trades found</p>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-tertiary)' }}>Asset Class</label>
+                <select
+                  value={filterAsset}
+                  onChange={(e) => setFilterAsset(e.target.value as any)}
+                  className="w-full mt-2 px-4 py-2 rounded-lg transition-all"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
+                    color: 'var(--text-primary)',
+                    fontSize: '12px',
+                  }}
+                >
+                  <option value="all">All Assets</option>
+                  <option value="forex">Forex</option>
+                  <option value="commodity">Commodity</option>
+                  <option value="index">Index</option>
+                </select>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-700/30 border-b border-slate-700">
-                  <th className="text-left py-4 px-6 font-semibold">Symbol</th>
-                  <th className="text-left py-4 px-6 font-semibold">Asset</th>
-                  <th className="text-left py-4 px-6 font-semibold">Date</th>
-                  <th className="text-left py-4 px-6 font-semibold">Entry</th>
-                  <th className="text-left py-4 px-6 font-semibold">Exit</th>
-                  <th className="text-left py-4 px-6 font-semibold">R:R</th>
-                  <th className="text-left py-4 px-6 font-semibold">Status</th>
-                  <th className="text-right py-4 px-6 font-semibold">P&L</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trades.map((trade, idx) => (
-                  <tr
-                    key={trade.id}
-                    onClick={() => router.push(`/dashboard/trade/${trade.id}`)}
-                    className={`border-b border-slate-700 hover:bg-slate-700/30 transition cursor-pointer ${
-                      idx % 2 === 0 ? 'bg-slate-800/20' : ''
-                    }`}
-                  >
-                    <td className="py-4 px-6 font-medium">{trade.symbol}</td>
-                    <td className="py-4 px-6 text-slate-300">
-                      {trade.asset_class.charAt(0).toUpperCase() + trade.asset_class.slice(1)}
-                    </td>
-                    <td className="py-4 px-6 text-slate-400">
-                      {format(new Date(trade.trade_date), 'MMM dd, yyyy')}
-                    </td>
-                    <td className="py-4 px-6">{trade.entry_price.toFixed(5)}</td>
-                    <td className="py-4 px-6">
-                      {trade.exit_price ? trade.exit_price.toFixed(5) : '—'}
-                    </td>
-                    <td className="py-4 px-6 font-medium">{trade.risk_reward_ratio}</td>
-                    <td className="py-4 px-6">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          trade.status === 'open'
-                            ? 'bg-blue-900/30 text-blue-300'
-                            : trade.status === 'closed'
-                            ? 'bg-green-900/30 text-green-300'
-                            : 'bg-red-900/30 text-red-300'
-                        }`}
-                      >
-                        {trade.status.charAt(0).toUpperCase() + trade.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className={`py-4 px-6 text-right font-semibold flex items-center justify-end gap-1 ${
-                      (trade.profit_loss ?? 0) > 0
-                        ? 'text-green-400'
-                        : (trade.profit_loss ?? 0) < 0
-                        ? 'text-red-400'
-                        : 'text-slate-300'
-                    }`}>
-                      {(trade.profit_loss ?? 0) > 0 && <TrendingUp className="w-4 h-4" />}
-                      {(trade.profit_loss ?? 0) < 0 && <TrendingDown className="w-4 h-4" />}
-                      {trade.profit_loss
-                        ? (trade.profit_loss >= 0 ? '+' : '') + trade.profit_loss.toFixed(2)
-                        : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
 
-      {/* Summary Stats */}
-      {trades.length > 0 && (
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-            <p className="text-slate-400 text-sm mb-1">Total Trades</p>
-            <p className="text-2xl font-bold">{trades.length}</p>
-          </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-            <p className="text-slate-400 text-sm mb-1">Closed Trades</p>
-            <p className="text-2xl font-bold">{trades.filter((t) => t.status === 'closed').length}</p>
-          </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-            <p className="text-slate-400 text-sm mb-1">Open Trades</p>
-            <p className="text-2xl font-bold">{trades.filter((t) => t.status === 'open').length}</p>
-          </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-            <p className="text-slate-400 text-sm mb-1">Total P&L</p>
-            <p className={`text-2xl font-bold ${
-              trades.reduce((sum, t) => sum + (t.profit_loss ?? 0), 0) >= 0
-                ? 'text-green-400'
-                : 'text-red-400'
-            }`}>
-              {trades.reduce((sum, t) => sum + (t.profit_loss ?? 0), 0) >= 0 ? '+' : ''}
-              {trades.reduce((sum, t) => sum + (t.profit_loss ?? 0), 0).toFixed(2)}
-            </p>
-          </div>
+          {/* Trades Grid */}
+          {trades.length === 0 ? (
+            <div
+              className="p-12 rounded-xl text-center"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid var(--glass-border)',
+              }}
+            >
+              <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.3 }}>📭</div>
+              <div style={{ color: 'var(--text-secondary)' }}>No trades found</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {trades.map((trade) => (
+                <ProfessionalTradeCard key={trade.id} trade={trade} />
+              ))}
+            </div>
+          )}
+
+          {/* Summary Stats */}
+          {trades.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div
+                className="p-4 rounded-xl"
+                style={{
+                  background: 'var(--glass-bg)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid var(--glass-border)',
+                }}
+              >
+                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', marginBottom: '8px' }}>
+                  Total Trades
+                </p>
+                <p style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                  {trades.length}
+                </p>
+              </div>
+              <div
+                className="p-4 rounded-xl"
+                style={{
+                  background: 'var(--glass-bg)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid var(--glass-border)',
+                }}
+              >
+                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', marginBottom: '8px' }}>
+                  Closed Trades
+                </p>
+                <p style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                  {trades.filter((t) => t.status === 'closed').length}
+                </p>
+              </div>
+              <div
+                className="p-4 rounded-xl"
+                style={{
+                  background: 'var(--glass-bg)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid var(--glass-border)',
+                }}
+              >
+                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', marginBottom: '8px' }}>
+                  Open Trades
+                </p>
+                <p style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                  {trades.filter((t) => t.status === 'open').length}
+                </p>
+              </div>
+              <div
+                className="p-4 rounded-xl"
+                style={{
+                  background: 'var(--glass-bg)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid var(--glass-border)',
+                }}
+              >
+                <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', marginBottom: '8px' }}>
+                  Total P&L
+                </p>
+                <p
+                  style={{
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    color: trades.reduce((sum, t) => sum + (t.profit_loss ?? 0), 0) >= 0
+                      ? 'var(--accent-green)'
+                      : 'var(--accent-red)',
+                  }}
+                >
+                  {trades.reduce((sum, t) => sum + (t.profit_loss ?? 0), 0) >= 0 ? '+' : ''}
+                  {trades.reduce((sum, t) => sum + (t.profit_loss ?? 0), 0).toFixed(2)}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

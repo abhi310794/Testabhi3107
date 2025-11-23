@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import { supabase, Trade } from '@/lib/supabase';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, TrendingDown, Target, Award } from 'lucide-react';
+import { DashboardSidebar } from '@/components/DashboardSidebar';
 
 interface ChartData {
   date: string;
@@ -94,10 +95,13 @@ export default function PerformancePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-700 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">Calculating performance...</p>
+      <div className="flex h-screen">
+        <DashboardSidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+            <p style={{ color: 'var(--text-secondary)' }}>Calculating performance...</p>
+          </div>
         </div>
       </div>
     );
@@ -116,168 +120,266 @@ export default function PerformancePage() {
     value,
   }));
 
-  const COLORS = ['#3b82f6', '#f59e0b', '#ef4444'];
+  const COLORS = ['#58a6ff', '#3fb950', '#f85149'];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Performance Analytics</h1>
-        <p className="text-slate-400">Track your trading performance and metrics</p>
-      </div>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f1117 0%, #161b22 50%, #0f1117 100%)' }}>
+      {/* Sidebar */}
+      <DashboardSidebar />
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-slate-400 text-sm">Win Rate</p>
-            <Award className="w-5 h-5 text-yellow-500 opacity-30" />
-          </div>
-          <p className="text-3xl font-bold">{stats.winRate.toFixed(1)}%</p>
-          <p className="text-xs text-slate-400 mt-2">
-            {stats.winningTrades}W / {stats.losingTrades}L
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar */}
+        <div
+          className="p-6 border-b"
+          style={{
+            background: 'var(--glass-bg)',
+            backdropFilter: 'blur(10px)',
+            borderColor: 'var(--glass-border)',
+          }}
+        >
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)' }}>
+            Performance Analytics
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            Track your trading performance and metrics
           </p>
         </div>
 
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-slate-400 text-sm">Total Profit</p>
-            <TrendingUp className="w-5 h-5 text-green-500 opacity-30" />
-          </div>
-          <p className={`text-3xl font-bold ${stats.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {stats.totalProfit >= 0 ? '+' : ''}{stats.totalProfit.toFixed(2)}
-          </p>
-          <p className="text-xs text-slate-400 mt-2">{stats.totalTrades} trades</p>
-        </div>
-
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-slate-400 text-sm">Avg Win / Loss</p>
-            <Target className="w-5 h-5 text-cyan-500 opacity-30" />
-          </div>
-          <p className="text-3xl font-bold">{stats.avgWin.toFixed(2)} / {Math.abs(stats.avgLoss).toFixed(2)}</p>
-          <p className="text-xs text-slate-400 mt-2">Per trade average</p>
-        </div>
-
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-slate-400 text-sm">Profit Factor</p>
-            <TrendingDown className="w-5 h-5 text-orange-500 opacity-30" />
-          </div>
-          <p className="text-3xl font-bold">{stats.profitFactor.toFixed(2)}</p>
-          <p className="text-xs text-slate-400 mt-2">Wins vs Losses ratio</p>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Cumulative P&L */}
-        <div className="lg:col-span-2 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <h2 className="text-xl font-bold mb-4">Cumulative P&L</h2>
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="date" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #475569',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="cumulative"
-                  stroke="#3b82f6"
-                  dot={{ fill: '#3b82f6', r: 4 }}
-                  name="Cumulative P&L"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-slate-400">
-              No data available
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-8">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div
+              className="p-6 rounded-xl"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid var(--glass-border)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Win Rate</p>
+                <Award className="w-5 h-5" style={{ color: 'var(--accent-yellow)', opacity: 0.3 }} />
+              </div>
+              <p style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {stats.winRate.toFixed(1)}%
+              </p>
+              <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
+                {stats.winningTrades}W / {stats.losingTrades}L
+              </p>
             </div>
-          )}
-        </div>
 
-        {/* Asset Distribution */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <h2 className="text-xl font-bold mb-4">Trades by Asset</h2>
-          {assetChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={assetChartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry) => `${entry.name}: ${entry.value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {assetChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-slate-400">
-              No data available
+            <div
+              className="p-6 rounded-xl"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid var(--glass-border)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Total Profit</p>
+                <TrendingUp className="w-5 h-5" style={{ color: 'var(--accent-green)', opacity: 0.3 }} />
+              </div>
+              <p
+                style={{
+                  fontSize: '28px',
+                  fontWeight: '700',
+                  color: stats.totalProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)',
+                }}
+              >
+                {stats.totalProfit >= 0 ? '+' : ''}{stats.totalProfit.toFixed(2)}
+              </p>
+              <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
+                {stats.totalTrades} trades
+              </p>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Detailed Stats */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-        <h2 className="text-xl font-bold mb-4">Detailed Statistics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="font-semibold text-slate-300 mb-3">Trade Results</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Total Trades:</span>
-                <span className="font-medium">{stats.totalTrades}</span>
+            <div
+              className="p-6 rounded-xl"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid var(--glass-border)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Avg Win / Loss</p>
+                <Target className="w-5 h-5" style={{ color: 'var(--accent-blue)', opacity: 0.3 }} />
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Winning Trades:</span>
-                <span className="font-medium text-green-400">{stats.winningTrades}</span>
+              <p style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {stats.avgWin.toFixed(2)} / {Math.abs(stats.avgLoss).toFixed(2)}
+              </p>
+              <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
+                Per trade average
+              </p>
+            </div>
+
+            <div
+              className="p-6 rounded-xl"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid var(--glass-border)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600' }}>Profit Factor</p>
+                <TrendingDown className="w-5 h-5" style={{ color: 'var(--accent-yellow)', opacity: 0.3 }} />
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Losing Trades:</span>
-                <span className="font-medium text-red-400">{stats.losingTrades}</span>
-              </div>
-              <div className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-                <span className="text-slate-400">Win Rate:</span>
-                <span className="font-medium">{stats.winRate.toFixed(2)}%</span>
-              </div>
+              <p style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {stats.profitFactor.toFixed(2)}
+              </p>
+              <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
+                Wins vs Losses ratio
+              </p>
             </div>
           </div>
 
-          <div>
-            <h3 className="font-semibold text-slate-300 mb-3">Trade Extremes</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Largest Win:</span>
-                <span className="font-medium text-green-400">+{stats.largestWin.toFixed(2)}</span>
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* Cumulative P&L */}
+            <div
+              className="lg:col-span-2 p-6 rounded-xl"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid var(--glass-border)',
+              }}
+            >
+              <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: 'var(--text-primary)' }}>
+                Cumulative P&L
+              </h2>
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                    <XAxis dataKey="date" stroke="var(--text-tertiary)" />
+                    <YAxis stroke="var(--text-tertiary)" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '8px',
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="cumulative"
+                      stroke="var(--accent-blue)"
+                      dot={{ fill: 'var(--accent-blue)', r: 4 }}
+                      name="Cumulative P&L"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center" style={{ color: 'var(--text-secondary)' }}>
+                  No data available
+                </div>
+              )}
+            </div>
+
+            {/* Asset Distribution */}
+            <div
+              className="p-6 rounded-xl"
+              style={{
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid var(--glass-border)',
+              }}
+            >
+              <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: 'var(--text-primary)' }}>
+                Trades by Asset
+              </h2>
+              {assetChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={assetChartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry) => `${entry.name}: ${entry.value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {assetChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center" style={{ color: 'var(--text-secondary)' }}>
+                  No data available
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Detailed Stats */}
+          <div
+            className="p-6 rounded-xl"
+            style={{
+              background: 'var(--glass-bg)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid var(--glass-border)',
+            }}
+          >
+            <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: 'var(--text-primary)' }}>
+              Detailed Statistics
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                  Trade Results
+                </h3>
+                <div style={{ fontSize: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Total Trades:</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{stats.totalTrades}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Winning Trades:</span>
+                    <span style={{ color: 'var(--accent-green)', fontWeight: '600' }}>{stats.winningTrades}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Losing Trades:</span>
+                    <span style={{ color: 'var(--accent-red)', fontWeight: '600' }}>{stats.losingTrades}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Win Rate:</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{stats.winRate.toFixed(2)}%</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Largest Loss:</span>
-                <span className="font-medium text-red-400">{stats.largestLoss.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Avg Win:</span>
-                <span className="font-medium text-green-400">+{stats.avgWin.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-                <span className="text-slate-400">Avg Loss:</span>
-                <span className="font-medium text-red-400">{stats.avgLoss.toFixed(2)}</span>
+
+              <div>
+                <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                  Trade Extremes
+                </h3>
+                <div style={{ fontSize: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Largest Win:</span>
+                    <span style={{ color: 'var(--accent-green)', fontWeight: '600' }}>+{stats.largestWin.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Largest Loss:</span>
+                    <span style={{ color: 'var(--accent-red)', fontWeight: '600' }}>{stats.largestLoss.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Avg Win:</span>
+                    <span style={{ color: 'var(--accent-green)', fontWeight: '600' }}>+{stats.avgWin.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Avg Loss:</span>
+                    <span style={{ color: 'var(--accent-red)', fontWeight: '600' }}>{stats.avgLoss.toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
