@@ -55,18 +55,6 @@ export default function DashboardPage() {
     };
 
     fetchTrades();
-
-    // Subscribe to real-time updates
-    const subscription = supabase
-      .from('trades')
-      .on('*', () => {
-        fetchTrades();
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [user]);
 
   if (loading) {
